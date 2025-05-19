@@ -1,5 +1,12 @@
 import { useState, useEffect } from 'react'
-import { View, Text, StyleSheet, Alert, FlatList } from 'react-native'
+import {
+  View,
+  Text,
+  StyleSheet,
+  Alert,
+  FlatList,
+  useWindowDimensions
+} from 'react-native'
 import { Ionicons } from '@expo/vector-icons'
 
 import Title from '../components/ui/Title'
@@ -26,15 +33,13 @@ const GameScreen = ({ userNumber, onGameOver }) => {
   const initalGuess = generateRandomBetween(1, 100, userNumber)
   const [currentGuess, setCurrentGuess] = useState(initalGuess)
   const [guessRounds, setGuessRounds] = useState([initalGuess])
+  const { width, height } = useWindowDimensions()
 
-  useEffect(
-    () => {
-      if (currentGuess === userNumber) {
-        onGameOver(guessRounds.length)
-      }
-    },
-    [currentGuess, userNumber, onGameOver]
-  )
+  useEffect(() => {
+    if (currentGuess === userNumber) {
+      onGameOver(guessRounds.length)
+    }
+  }, [currentGuess, userNumber, onGameOver])
 
   useEffect(() => {
     minBoundary = 1
@@ -70,12 +75,9 @@ const GameScreen = ({ userNumber, onGameOver }) => {
 
   const guessRoundsLength = guessRounds.length
 
-  return (
-    <View style={styles.screen}>
-      <Title>Opponent's Guess</Title>
-      <NumberContainer>
-        {currentGuess}
-      </NumberContainer>
+  let content = (
+    <>
+      <NumberContainer>{currentGuess}</NumberContainer>
       <Card>
         <InstructionText style={styles.instructionText}>
           Higher or Lower
@@ -93,15 +95,45 @@ const GameScreen = ({ userNumber, onGameOver }) => {
           </View>
         </View>
       </Card>
+    </>
+  )
+
+  if (width > 500) {
+    content = (
+      <>
+        <InstructionText style={styles.instructionText}>
+          Higher or Lower
+        </InstructionText>
+        <View style={styles.buttonsContainerWide}>
+          <View style={styles.buttonContainer}>
+            <PrimaryButton onPress={nextGuessHandler.bind(this, 'lower')}>
+              <Ionicons name='remove' size={24} color='white' />
+            </PrimaryButton>
+          </View>
+          <NumberContainer>{currentGuess}</NumberContainer>
+          <View style={styles.buttonContainer}>
+            <PrimaryButton onPress={nextGuessHandler.bind(this, 'greater')}>
+              <Ionicons name='add' size={24} color='white' />
+            </PrimaryButton>
+          </View>
+        </View>
+      </>
+    )
+  }
+
+  return (
+    <View style={styles.screen}>
+      <Title>Opponent's Guess</Title>
+      {content}
       <View style={styles.listContainer}>
-        {/* {guessRounds.map(guessRound => <Text key={guessRound}>{guessRound}</Text>)} */}
         <FlatList
           data={guessRounds}
-          renderItem={itemData =>
+          renderItem={itemData => (
             <GuessLogItem
               roundNumber={guessRoundsLength - itemData.index}
               guess={itemData.item}
-            />}
+            />
+          )}
           keyExtractor={item => item}
         />
       </View>
@@ -126,8 +158,11 @@ const styles = StyleSheet.create({
   buttonContainer: {
     flex: 1
   },
+  buttonsContainerWide: {
+    flexDirection: 'row',
+    alignItems: 'center'
+  },
   listContainer: {
     flex: 1
-    // padding: 16
   }
 })
